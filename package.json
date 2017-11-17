@@ -1,0 +1,16 @@
+{
+  "name": "color-helper",
+  "version": "0.0.1",
+  "description": "颜色处理 辅助类",
+  "main": "colorHelper.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "color",
+    "helpter",
+    "parser"
+  ],
+  "author": "阮家友",
+  "license": "MIT"
+}
