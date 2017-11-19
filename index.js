@@ -2,44 +2,51 @@
 class Color {
     /**
      * @constructor
-     * @param {string} 
+     * @param {string|object} 
      */
     constructor(val) {
         this._rgb = { R: 0, G: 0, B: 0 };
+        this._hsl = { H: 0, S: 0, L: 0 };
         this.A = 1;
         if (val) {
             this.parse(val);
         }
     }
-    // 1 1.22 "1" "a" {a:1}
+    // RGB和HSL状态切换
+    _trans2(RGB) {
+        if (RGB) {
+            this._hsl = this._rgb2hsl(this._2rgb());
+        } else {
+            this._rgb = this._hsl2rgb(this._2hsl());
+        }
+    }
     set R(n) {
         this._rgb.R = this._limit(n, 255);
+        this._trans2(true);
     }
     set G(n) {
         this._rgb.G = this._limit(n, 255);
+        this._trans2(true);
     }
     set B(n) {
         this._rgb.B = this._limit(n, 255);
+        this._trans2(true);
+    }
+    set H(n) {
+        this._hsl.H = this._limit(n, 360);
+        this._trans2(false);
+    }
+    set S(n) {
+        this._hsl.S = this._limit(n);
+        this._trans2(false);
+    }
+    set L(n) {
+        this._hsl.L = this._limit(n);
+        this._trans2(false);
     }
     // 设置透明度 0-1 最小单位0.01
     set A(n) {
         this._a = this._limit(n);
-    }
-    // rgb2hsl --> json -->  set h/s/l -- > hsl2rgb 
-    set H(n) {
-        var o = this._2hsl();
-        o.H = this._limit(n, 360);
-        this.parse(o);
-    }
-    set S(n) {
-        var o = this._2hsl();
-        o.S = this._limit(n);
-        this.parse(o);
-    }
-    set L(n) {
-        var o = this._2hsl();
-        o.L = this._limit(n);
-        this.parse(o);
     }
     get R() {
         return this._rgb.R;
@@ -49,6 +56,15 @@ class Color {
     }
     get B() {
         return this._rgb.B;
+    }
+    get H() {
+        return this._hsl.H;
+    }
+    get S() {
+        return this._hsl.S;
+    }
+    get L() {
+        return this._hsl.L;
     }
     get A() {
         return this._a;
@@ -63,9 +79,11 @@ class Color {
         if (typeof str === 'object') {
             this.A = str.A;
             if (str.H && str.S && str.L) {
-                str = this._hsl2rgb(str);
-            }
-            if (str.R || str.G || str.B) {
+                this.H = str.H;
+                this.S = str.S;
+                this.L = str.L;
+                return this;
+            } else if (str.R && str.G && str.B) {
                 this.R = str.R;
                 this.G = str.G;
                 this.B = str.B;
@@ -122,7 +140,6 @@ class Color {
     }
     toString(type) {
         let T = Color.TYPE,
-            hsl = this._2hsl(),
             res;
         switch (type) {
             case T.RGB:
@@ -132,10 +149,10 @@ class Color {
                 res = `rgba(${this.R}, ${this.G}, ${this.B}, ${this.A})`;
                 break;
             case T.HSL:
-                res = `hsl(${hsl.H}, ${hsl.S}, ${hsl.L})`;
+                res = `hsl(${this.H}, ${this.S}, ${this.L})`;
                 break;
             case T.HSLA:
-                res = `hsla(${hsl.H}, ${hsl.S}, ${hsl.L}, ${this.A})`;
+                res = `hsla(${this.H}, ${this.S}, ${this.L}, ${this.A})`;
                 break;
             case T.HSB:
                 //TODO:
@@ -168,9 +185,9 @@ class Color {
         switch (type) {
             case T.RGB: break;
             case T.RGBA: res.A = this.A; break;
-            case T.HSL: res = this._2hsl(); break;
+            case T.HSL: res = { H: this._hsl.H, S: this.S, L: this.L }; break;
             case T.HSLA:
-                res = this._2hsl();
+                res = { H: this.H, S: this.S, L: this.L };
                 res.A = this.A;
                 break;
             case T.HSB: break;
@@ -209,12 +226,15 @@ class Color {
     }
     // return json
     _2rgb() {
-        return this._2rgb();
+        return this._rgb;
     }
     _2rgba() {
-        let o = this._2rgb();
+        let o = this._rgb;
         o.A = this.A;
         return o;
+    }
+    _2hsl() {
+        return this._hsl;
     }
     _2hex6() {
         return `#${this._2hex_str(this.R)}${this._2hex_str(this.G)}${this._2hex_str(this.B)}`;
@@ -258,10 +278,10 @@ class Color {
         var b = Math.round(this._hueToRGB(p, q, tb) * 255);
         return { R: r, G: g, B: b };
     }
-    _2hsl() {
-        var r = this._rgb.R / 255,
-            g = this._rgb.G / 255,
-            b = this._rgb.B / 255,
+    _rgb2hsl(o) {
+        var r = o.R / 255,
+            g = o.G / 255,
+            b = o.B / 255,
             max = Math.max(r, g, b),
             min = Math.min(r, g, b),
             add = max + min,
@@ -477,5 +497,6 @@ Color.TYPE = {
     'HSL': 'HSL',
     'HSLA': 'HSLA'
 };
-
+var o = new Color({ R: 51, G: 85, B: 170 });
+console.log(o.toJSON(Color.TYPE.HSL));
 module.exports = Color;

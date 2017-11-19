@@ -200,10 +200,7 @@ describe('Color._2hex8()', function(){
 });
 //TODO:
 describe('Color._2hsl()', function(){
-    var o = new Color();
-    o.R = 51;
-    o.G = 85;
-    o.B = 170;
+    var o = new Color({ R: 51, G: 85, B: 170 });
     it('_2hsl()', function(){
         let t = o._2hsl();
         assert.equal(t.H, 223);
